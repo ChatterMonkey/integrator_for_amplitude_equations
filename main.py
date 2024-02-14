@@ -6,13 +6,18 @@ import matplotlib.pyplot as plt
 
 eps = 0.01
 dt = 0.0005
-N = 5001
+N = 10000
 trajdata = []
 
 #each row is re(A1), im(A1), re(A2), im(A2)
-initial_components = np.array([[1, 0, 1, 1], [0, 1, 1,1]])
-omegas = np.array([[1,1.1],[1,2]])
+#initial_components = np.array([[1, 0, 1, 0], [np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5)],[0, 1, 0, 1]])
 
+
+initial_components = np.array([[3,1,3,0]])
+
+
+omegas = np.array([[1,2]])
+legends = ["A1, A2 = 1, omega1, omega2 = 1,2","A1, A2 =2 omega1, omega2 = 1,2","A1, A2 =3 omega1, omega2 = 1,2"]
 print(initial_components.shape[0])
 
 
@@ -67,12 +72,41 @@ def compute_traj(trajdata):  # calculates and stores trajectories, given a list 
         print(traj[N - 3:N])
     return trajs
 
-def show_phasespace(N, dt, trajs):
+def show_rectangular_phasespace(N, dt, trajs, legends):
     ax = plt.figure().add_subplot(projection='3d')
     values = list(trajs.values())
+    i = 0
     for trajectory in values:
 
-        ax.plot(np.imag(trajectory[:, 0]), np.real(trajectory[:, 0]), np.real(trajectory[:, 1]))
+        ax.plot(np.imag(trajectory[:, 0]), np.real(trajectory[:, 0]), np.real(trajectory[:, 1]), label = legends[i] )
+        i = i+1
+    plt.legend()
+
+def show_parabolic_phasespace(N, dt, trajs, legends):
+
+    ax = plt.figure().add_subplot(projection='3d')
+    values = list(trajs.values())
+    i = 0
+    for trajectory in values:
+        A1 = trajectory[: ,0]
+        A2 = trajectory[: ,1]
+        z1 = 1j * A1
+        z2 = np.conjugate(A2)
+        hype_trajs = np.zeros((trajectory.shape[0], 3) )
+        print(hype_trajs.shape)
+        hype_trajs[:, 0] = np.abs(A1)**2
+        hype_trajs[:, 1] = np.cos(np.angle(A1) + np.angle(A2))
+        hype_trajs[:, 2] = np.cos(np.angle(A2))
+        print(trajectory)
+        print(hype_trajs)
+        ax.plot(hype_trajs[:, 0], hype_trajs[:, 1], hype_trajs[:, 2], label=legends[i])
+        plt.xlabel("|A1|")
+        plt.ylabel("cos(phi + phi')")
+        plt.ylabel("cos( phi')")
+        i = i + 1
+    plt.legend()
+
+
     plt.show()
 def show_components(N, dt, trajs):
     ax = plt.figure().add_subplot()
@@ -134,9 +168,10 @@ def extract_values(trajs, samples):
 
 trajs = compute_traj(trajdata)
 #trajs = reconstitute(trajdata)
-extract_values(trajs,[0,10,100,5000])
+#extract_values(trajs,[0,10,100,5000])
 
-#show_phasespace(N,dt, trajs)
+
+show_parabolic_phasespace(N,dt, trajs, legends)
 #show_components(N,dt, trajs)
 
 
