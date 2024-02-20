@@ -9,38 +9,119 @@ dt = 0.0005
 N = 10000
 trajdata = []
 
-#each row is re(A1), im(A1), re(A2), im(A2)
-#initial_components = np.array([[1, 0, 1, 0], [np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5)],[0, 1, 0, 1]])
 
 
-initial_components = np.array([[3,1,3,0]])
+class trajectory_skeleton:
+    def __init__(self, epsilon, initial_conditions, omega1, omega2 , q ,s ):
+        self.epsilon = epsilon
+        self.initial_conditions = initial_conditions
+        self.omega1 = omega1
+        self.omega2 = omega2
+        self.q = q
+        self.s = s
 
+    def calculate(self, N, dt):
+        data = compute_trajectory_data(self, N, dt)
+        self.calculated_trajectory = [N, dt, data]
 
-omegas = np.array([[1,2]])
-legends = ["A1, A2 = 1, omega1, omega2 = 1,2","A1, A2 =2 omega1, omega2 = 1,2","A1, A2 =3 omega1, omega2 = 1,2"]
-print(initial_components.shape[0])
+    def label(self):
 
+        label = str(self.initial_conditions) + '_'  + str(self.omega2) + '_' + str(self.omega2) + '_' + str(self.epsilon) + '_' + str(self.q) + '_' + str(self.s)
+        return label
 
-for run in range(0,initial_components.shape[0]):
-    A1  = initial_components[run,0] + initial_components[run,1]*1j
-    A2 = initial_components[run, 2] + initial_components[run, 3] * 1j
-    trajdata.append([A1, A2, omegas[run], eps, dt, N])
+    def legend(self):
+        legend = self.label
+        return legend
 
-print(trajdata)
+    def plot_rectangular(self, ax, N, dt):
 
-def label(A1, A2, omega, eps, dt, N):
-    return (str(A1) + '_' + str(A2) + '_' + str(omega[0]) + '_' + str(omega[1]) + '_' + str(eps) + '_' + str(dt) + '_' + str(N) + '.npy')
-def unlable(string):
-    stringettes = string.strip(".npy").split("_")
-    for i in range(0,len(stringettes)):
-        if i in [0,1]:
-            stringettes[i] = complex(stringettes[i])
+        if hasattr(self, 'calculated_trajectory'):
+            data = self.calculated_trajectory[2]
         else:
-            stringettes[i] = float(stringettes[i])
-    return stringettes
+            self.calculate(self, N, dt)
+            data = self.calculated_trajectory[2]
+
+        ax.plot(np.imag(data[:, 0]), np.real(data[:, 0]), np.real(data[:, 1]))
 
 
-def f(A, omega, eps):
+
+
+
+
+
+def f(trajectory_skeleton, A):
+    A1, A2 = A
+    w1 = trajectory_skeleton.omega1
+    w2 = trajectory_skeleton.omega2
+    s = trajectory_skeleton.s
+    q = trajectory_skeleton.q
+
+    array = np.zeros(2, dtype=np.complex64)
+
+    array[0] = 1j * w1 * A1 + eps * A2 + 1j * A1 * (s[0, 0] * np.abs(A1) ** 2 + s[0, 1] * np.abs(A2) ** 2)
+    array[1] = 1j * w1 * A2 + eps * q* A1 + 1j * A2 * (s[1, 0] * np.abs(A1) ** 2 + s[1, 1] * np.abs(A2) ** 2)
+    return array
+
+
+def compute_trajectory_data(trajectory_skeleton, N, dt):
+    A10 = trajectory_skeleton.initial_conditions[0]
+    A20 = trajectory_skeleton.initial_conditions[1]
+
+    data = np.zeros((N, 2), dtype=np.complex64)
+    data[0, :] = A10, A20
+    for i in range(0, N - 1):
+        a1 = dt * f(trajectory_skeleton, data[i, :])
+        a2 = dt * f(trajectory_skeleton, data[i, :] + a1 / 2)
+        a3 = dt * f(trajectory_skeleton, data[i, :] + a2 / 2)
+        a4 = dt * f(trajectory_skeleton, data[i, :] + a3)
+        data[i + 1, :] = data[i, :] + (a1 + 2 * a2 + 2 * a3 + a4) / 6
+
+    return data
+
+
+
+
+t = trajectory_skeleton(0.01,[1,0],1,1,1,np.ones((2,2)))
+
+
+print(t.label())
+
+t.calculate(10000, 0.0005)
+print(t.calculated_trajectory)
+
+ax = plt.figure().add_subplot(projection='3d')
+
+t.plot_rectangular(ax, 10000,  0.0005)
+
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def F(A, omega, eps):
     A1, A2 = A
 
     array = np.zeros(2, dtype=np.complex64)
@@ -49,8 +130,8 @@ def f(A, omega, eps):
     array[1] = 1j * omega[1] * A2 + eps * A1 + 1j * A2 * (s[1, 0] * np.abs(A1) ** 2 + s[1, 1] * np.abs(A2) ** 2)
     return array
 
-
-def compute_traj(trajdata):  # calculates and stores trajectories, given a list of their data, returns dictionary of trajectories
+def compute_traj(
+        trajdata):  # calculates and stores trajectories, given a list of their data, returns dictionary of trajectories
     trajs = dict()
     for [A1, A2, omega, eps, dt, N] in trajdata:
 
@@ -71,6 +152,42 @@ def compute_traj(trajdata):  # calculates and stores trajectories, given a list 
         print("...")
         print(traj[N - 3:N])
     return trajs
+
+
+
+
+
+#each row is re(A1), im(A1), re(A2), im(A2)
+#initial_components = np.array([[1, 0, 1, 0], [np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5)],[0, 1, 0, 1]])
+
+
+initial_components = np.array([[3,1,3,0]])
+
+
+omegas = np.array([[1,2]])
+legends = ["A1, A2 = 1, omega1, omega2 = 1,2","A1, A2 =2 omega1, omega2 = 1,2","A1, A2 =3 omega1, omega2 = 1,2"]
+#print(initial_components.shape[0])
+
+
+for run in range(0,initial_components.shape[0]):
+    A1  = initial_components[run,0] + initial_components[run,1]*1j
+    A2 = initial_components[run, 2] + initial_components[run, 3] * 1j
+    trajdata.append([A1, A2, omegas[run], eps, dt, N])
+
+#print(trajdata)
+
+def label(A1, A2, omega, eps, dt, N):
+    return (str(A1) + '_' + str(A2) + '_' + str(omega[0]) + '_' + str(omega[1]) + '_' + str(eps) + '_' + str(dt) + '_' + str(N) + '.npy')
+def unlable(string):
+    stringettes = string.strip(".npy").split("_")
+    for i in range(0,len(stringettes)):
+        if i in [0,1]:
+            stringettes[i] = complex(stringettes[i])
+        else:
+            stringettes[i] = float(stringettes[i])
+    return stringettes
+
+
 
 def show_rectangular_phasespace(N, dt, trajs, legends):
     ax = plt.figure().add_subplot(projection='3d')
@@ -167,12 +284,12 @@ def extract_values(trajs, samples):
 
 
 #trajs = compute_traj(trajdata)
-trajs = reconstitute(trajdata)
+#trajs = reconstitute(trajdata)
 #extract_values(trajs,[0,10,100,5000])
 
 
 #show_parabolic_phasespace(N,dt, trajs, legends)
-show_rectangular_phasespace(N, dt, trajs, legends)
+#show_rectangular_phasespace(N, dt, trajs, legends)
 #show_components(N,dt, trajs)
 
 
