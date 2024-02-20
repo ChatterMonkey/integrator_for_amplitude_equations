@@ -166,12 +166,13 @@ def extract_values(trajs, samples):
 
 
 
-trajs = compute_traj(trajdata)
-#trajs = reconstitute(trajdata)
+#trajs = compute_traj(trajdata)
+trajs = reconstitute(trajdata)
 #extract_values(trajs,[0,10,100,5000])
 
 
-show_parabolic_phasespace(N,dt, trajs, legends)
+#show_parabolic_phasespace(N,dt, trajs, legends)
+show_rectangular_phasespace(N, dt, trajs, legends)
 #show_components(N,dt, trajs)
 
 
