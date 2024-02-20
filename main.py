@@ -59,7 +59,7 @@ def f(trajectory_skeleton, A):
     array = np.zeros(2, dtype=np.complex64)
 
     array[0] = 1j * w1 * A1 + eps * A2 + 1j * A1 * (s[0, 0] * np.abs(A1) ** 2 + s[0, 1] * np.abs(A2) ** 2)
-    array[1] = 1j * w1 * A2 + eps * q* A1 + 1j * A2 * (s[1, 0] * np.abs(A1) ** 2 + s[1, 1] * np.abs(A2) ** 2)
+    array[1] = 1j * w2 * A2 + eps * q* A1 + 1j * A2 * (s[1, 0] * np.abs(A1) ** 2 + s[1, 1] * np.abs(A2) ** 2)
     return array
 
 
@@ -84,16 +84,16 @@ def compute_trajectory_data(trajectory_skeleton, N, dt):
 t = trajectory_skeleton(0.01,[1,0],1,1,1,np.ones((2,2)))
 
 
-print(t.label())
+#print(t.label())
 
-t.calculate(10000, 0.0005)
-print(t.calculated_trajectory)
+#t.calculate(10000, 0.0005)
+#print(t.calculated_trajectory)
 
-ax = plt.figure().add_subplot(projection='3d')
+#ax = plt.figure().add_subplot(projection='3d')
 
-t.plot_rectangular(ax, 10000,  0.0005)
+#t.plot_rectangular(ax, 10000,  0.0005)
 
-plt.show()
+#plt.show()
 
 
 
@@ -138,10 +138,10 @@ def compute_traj(
         traj = np.zeros((N, 2), dtype=np.complex64)
         traj[0, :] = A1, A2
         for i in range(0, N - 1):
-            a1 = dt * f(traj[i, :], omega, eps)
-            a2 = dt * f(traj[i, :] + a1 / 2, omega, eps)
-            a3 = dt * f(traj[i, :] + a2 / 2, omega, eps)
-            a4 = dt * f(traj[i, :] + a3, omega, eps)
+            a1 = dt * F(traj[i, :], omega, eps)
+            a2 = dt * F(traj[i, :] + a1 / 2, omega, eps)
+            a3 = dt * F(traj[i, :] + a2 / 2, omega, eps)
+            a4 = dt * F(traj[i, :] + a3, omega, eps)
             traj[i + 1, :] = traj[i, :] + (a1 + 2 * a2 + 2 * a3 + a4) / 6
 
         name = label(A1, A2, omega, eps, dt, N)
@@ -161,10 +161,10 @@ def compute_traj(
 #initial_components = np.array([[1, 0, 1, 0], [np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5), np.sqrt(0.5)],[0, 1, 0, 1]])
 
 
-initial_components = np.array([[3,1,3,0]])
+initial_components = np.array([[1,0,0,0]])
 
 
-omegas = np.array([[1,2]])
+omegas = np.array([[1,1]])
 legends = ["A1, A2 = 1, omega1, omega2 = 1,2","A1, A2 =2 omega1, omega2 = 1,2","A1, A2 =3 omega1, omega2 = 1,2"]
 #print(initial_components.shape[0])
 
@@ -281,15 +281,16 @@ def extract_values(trajs, samples):
     return
 
 
+N = 10000
+dt = 0.0005
 
-
-#trajs = compute_traj(trajdata)
+trajs = compute_traj(trajdata)
 #trajs = reconstitute(trajdata)
 #extract_values(trajs,[0,10,100,5000])
 
 
 #show_parabolic_phasespace(N,dt, trajs, legends)
-#show_rectangular_phasespace(N, dt, trajs, legends)
+show_rectangular_phasespace(N, dt, trajs, legends)
 #show_components(N,dt, trajs)
 
 
